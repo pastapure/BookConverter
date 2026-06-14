@@ -1,0 +1,4 @@
+# Optional: text-to-speech podcast generation
+# Install with: pip install -r requirements/tts.txt
+edge-tts>=6.0
+pydub>=0.25

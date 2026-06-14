@@ -1,0 +1,21 @@
+# Ideogram 4.0 — Local Image Generation (HuggingFace Diffusers)
+# GPU required (16GB+ VRAM recommended, NF4 quantized)
+#
+# Install:
+#   pip install -r requirements/ideogram.txt
+
+# Core: diffusers from GitHub (Ideogram4Pipeline is not in the pip release yet)
+git+https://github.com/huggingface/diffusers.git
+
+# BitsAndBytes for NF4 quantization (reduces VRAM from ~36GB to ~16GB)
+bitsandbytes>=0.45
+
+# Local prompt upsampling (schema-constrained JSON generation)
+outlines>=0.1
+
+# Required by diffusers
+transformers>=4.50
+accelerate>=1.0
+sentencepiece>=0.2
+
+# Already in base.txt: torch (installed separately for CUDA)

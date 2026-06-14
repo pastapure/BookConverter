@@ -1,0 +1,5 @@
+# Optional: speaker diarization + identification support
+# Install with: pip install -r requirements/diarization.txt
+# NO HuggingFace token required — uses public SpeechBrain models.
+speechbrain>=1.0
+scikit-learn>=1.0

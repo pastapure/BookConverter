@@ -1,0 +1,6 @@
+# Optional: Coqui TTS — local XTTS-v2 voice cloning (no API key needed)
+# Install with: pip install -r requirements/coqui.txt
+# NOTE: Requires CUDA GPU for reasonable performance.
+# The XTTS-v2 model (~1.9 GB) is auto-downloaded on first use.
+TTS>=0.22
+pydub>=0.25

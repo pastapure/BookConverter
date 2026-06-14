@@ -1,0 +1,27 @@
+# Virtual environment
+.venv/
+venv/
+
+# Output directory
+output/
+
+# Environment (contains secrets)
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large model checkpoints (keep in separate storage)
+models/
+data/tts/
+
+# Generated assets
+generated.mp3
