@@ -1,0 +1,110 @@
+{
+  "fp16": {
+    "mode": "fp16",
+    "load_time_s": 177.5,
+    "total_inference_s": 208.0,
+    "total_audio_s": 105.8,
+    "avg_rtf": 1.97,
+    "samples": {
+      "short": {
+        "chars": 20,
+        "inference_s": 4.41,
+        "audio_duration_s": 1.9,
+        "rtf": 2.27,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp16\\short.wav",
+        "output_size_bytes": 186448
+      },
+      "medium": {
+        "chars": 97,
+        "inference_s": 12.14,
+        "audio_duration_s": 5.8,
+        "rtf": 2.08,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp16\\medium.wav",
+        "output_size_bytes": 561232
+      },
+      "long": {
+        "chars": 326,
+        "inference_s": 38.46,
+        "audio_duration_s": 19.4,
+        "rtf": 1.98,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp16\\long.wav",
+        "output_size_bytes": 1862736
+      },
+      "xlong": {
+        "chars": 632,
+        "inference_s": 77.49,
+        "audio_duration_s": 39.4,
+        "rtf": 1.97,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp16\\xlong.wav",
+        "output_size_bytes": 3779664
+      },
+      "paragraph": {
+        "chars": 660,
+        "inference_s": 75.54,
+        "audio_duration_s": 39.3,
+        "rtf": 1.92,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp16\\paragraph.wav",
+        "output_size_bytes": 3770448
+      }
+    },
+    "gpu": {
+      "device": "NVIDIA GeForce RTX 5080",
+      "vram_before_gb": 0.0,
+      "vram_after_gb": 1.0
+    }
+  },
+  "fp32": {
+    "mode": "fp32",
+    "load_time_s": 99.0,
+    "total_inference_s": 187.5,
+    "total_audio_s": 107.4,
+    "avg_rtf": 1.75,
+    "samples": {
+      "short": {
+        "chars": 20,
+        "inference_s": 3.61,
+        "audio_duration_s": 2.0,
+        "rtf": 1.77,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp32\\short.wav",
+        "output_size_bytes": 195664
+      },
+      "medium": {
+        "chars": 97,
+        "inference_s": 9.61,
+        "audio_duration_s": 5.5,
+        "rtf": 1.76,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp32\\medium.wav",
+        "output_size_bytes": 525392
+      },
+      "long": {
+        "chars": 326,
+        "inference_s": 35.55,
+        "audio_duration_s": 20.6,
+        "rtf": 1.73,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp32\\long.wav",
+        "output_size_bytes": 1978448
+      },
+      "xlong": {
+        "chars": 632,
+        "inference_s": 67.12,
+        "audio_duration_s": 39.4,
+        "rtf": 1.7,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp32\\xlong.wav",
+        "output_size_bytes": 3779664
+      },
+      "paragraph": {
+        "chars": 660,
+        "inference_s": 71.64,
+        "audio_duration_s": 39.9,
+        "rtf": 1.8,
+        "output_path": "D:\\Projects\\BookConverter\\benchmark_results\\fp32\\paragraph.wav",
+        "output_size_bytes": 3828816
+      }
+    },
+    "gpu": {
+      "device": "NVIDIA GeForce RTX 5080",
+      "vram_before_gb": 0.0,
+      "vram_after_gb": 1.8
+    }
+  }
+}

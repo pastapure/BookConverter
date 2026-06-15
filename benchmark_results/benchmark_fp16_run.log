@@ -1,0 +1,27 @@
+
+######################################################################
+#  BENCHMARK ITERATION: FP16
+######################################################################
+
+======================================================================
+  BENCHMARK MODE: FP16=ON
+======================================================================
+  GPU: NVIDIA GeForce RTX 5080
+  VRAM before: 0.0 GB
+  Device: cuda
+Traceback (most recent call last):
+  File "D:\Projects\BookConverter\benchmark_tts.py", line 356, in <module>
+    main()
+  File "D:\Projects\BookConverter\benchmark_tts.py", line 282, in main
+    result = run_benchmark(mode, output_dir)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\BookConverter\benchmark_tts.py", line 155, in run_benchmark
+    model, gpt_cond, speaker_emb, fp16 = load_model(fp16=fp16)
+                                         ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\Projects\BookConverter\benchmark_tts.py", line 63, in load_model
+    from TTS.tts.models.xtts import Xtts
+  File "C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\TTS\tts\models\xtts.py", line 12, in <module>
+    from TTS.tts.layers.xtts.stream_generator import init_stream_support
+  File "C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\TTS\tts\layers\xtts\stream_generator.py", line 13, in <module>
+    from transformers import (
+ImportError: cannot import name 'BeamSearchScorer' from 'transformers' (C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\transformers\__init__.py)

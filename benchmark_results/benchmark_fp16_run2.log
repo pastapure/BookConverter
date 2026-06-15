@@ -1,0 +1,76 @@
+
+######################################################################
+#  BENCHMARK ITERATION: FP16
+######################################################################
+
+======================================================================
+  BENCHMARK MODE: FP16=ON
+======================================================================
+  GPU: NVIDIA GeForce RTX 5080
+  VRAM before: 0.0 GB
+  Device: cuda
+  Loading model (FP16=True)...
+GPT2InferenceModel has generative capabilities, as `prepare_inputs_for_generation` is explicitly overwritten. However, it doesn't directly inherit from `GenerationMixin`. From 👉v4.50👈 onwards, `PreTrainedModel` will NOT inherit from `GenerationMixin`, and this model will lose the ability to call `generate` and other related functions.
+  - If you're using `trust_remote_code=True`, you can get rid of this warning by loading the model with an auto class. See https://huggingface.co/docs/transformers/en/model_doc/auto#auto-classes
+  - If you are the owner of the model architecture code, please modify your model class such that it inherits from `GenerationMixin` (after `PreTrainedModel`, otherwise you'll get an exception).
+  - If you are not the owner of the model architecture class, please contact the model code owner to update it.
+  Checkpoint loaded: 45.8s
+D:\Projects\BookConverter\benchmark_tts.py:88: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\utils.py:213: UserWarning: In 2.9, this function's implementation will be changed to use torchaudio.load_with_torchcodec` under the hood. Some parameters like ``normalize``, ``format``, ``buffer_size``, and ``backend`` will be ignored. We recommend that you port your code to rely directly on TorchCodec's decoder instead: https://docs.pytorch.org/torchcodec/stable/generated/torchcodec.decoders.AudioDecoder.html#torchcodec.decoders.AudioDecoder.
+  warnings.warn(
+  Latents computed: 4.1s
+  Total load: 57.7s
+  VRAM after load: 1.0 GB  (+1.0 GB)
+
+  Warm-up (1 inference)...
+D:\Projects\BookConverter\benchmark_tts.py:115: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  autocast_ctx = torch.cuda.amp.autocast(enabled=fp16)
+The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+  Warm-up done: 5.08s
+
+  [SHORT] 20 chars ...
+    inference: 3.61s  |  audio: 1.9s  |  RTF: 1.94x
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\utils.py:337: UserWarning: In 2.9, this function's implementation will be changed to use torchaudio.save_with_torchcodec` under the hood. Some parameters like format, encoding, bits_per_sample, buffer_size, and ``backend`` will be ignored. We recommend that you port your code to rely directly on TorchCodec's encoder instead: https://docs.pytorch.org/torchcodec/stable/generated/torchcodec.encoders.AudioEncoder
+  warnings.warn(
+    saved: short.wav (178,256 bytes)
+
+  [MEDIUM] 97 chars ...
+    inference: 12.38s  |  audio: 6.0s  |  RTF: 2.07x
+    saved: medium.wav (574,544 bytes)
+
+  [LONG] 326 chars ...
+    inference: 41.44s  |  audio: 19.6s  |  RTF: 2.11x
+    saved: long.wav (1,884,240 bytes)
+
+  [XLONG] 632 chars ...
+    inference: 78.96s  |  audio: 40.2s  |  RTF: 1.96x
+    saved: xlong.wav (3,863,632 bytes)
+
+  [PARAGRAPH] 660 chars ...
+    inference: 76.05s  |  audio: 39.8s  |  RTF: 1.91x
+    saved: paragraph.wav (3,822,672 bytes)
+
+──────────────────────────────────────────────────────────────────────
+  SUMMARY: FP16=ON
+──────────────────────────────────────────────────────────────────────
+  Model load time:      92.2s
+  Total inference:      212.4s
+  Total audio output:   107.5s
+  Average RTF:          1.98x
+  VRAM used:            1.0 GB
+
+──────────────────────────────────────────────────────────────────────
+  AUDIO INTEGRITY VERIFICATION
+──────────────────────────────────────────────────────────────────────
+D:\Projects\BookConverter\benchmark_tts.py:243: UserWarning: torchaudio._backend.utils.info has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  info = torchaudio.info(path)
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\soundfile_backend.py:120: UserWarning: torchaudio._backend.common.AudioMetaData has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  return AudioMetaData(
+  ✓ All audio files valid — no corruption or truncation
+  Result: ✓ PASS
+
+  Results saved: D:\Projects\BookConverter\benchmark_results\benchmark_report.json
+  Audio outputs: D:\Projects\BookConverter\benchmark_results\<mode>
+======================================================================
+

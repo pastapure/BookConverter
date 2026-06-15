@@ -36,6 +36,12 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+# Use tensor cores for FP32 matmuls (free speedup on Blackwell/Ampere+)
+if torch.cuda.is_available():
+    torch.set_float32_matmul_precision("high")
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.deterministic = False
+
 # ── PyTorch 2.6+ compat: allow TTS checkpoint classes ──────────────────────────
 # PyTorch >=2.6 defaults to weights_only=True for torch.load, but Coqui TTS
 # checkpoints contain custom classes that need weights_only=False.
@@ -114,11 +120,15 @@ class CoquiTTSEngine:
         device: Torch device (``cuda`` or ``cpu``, auto-detected if ``None``).
     """
 
+    # Global cache for finetuned models (keyed by model_dir|fp16)
+    _ft_cache: dict[str, dict] = {}
+
     def __init__(
         self,
         reference_wav: str,
         finetuned_dir: Optional[str] = None,
         device: Optional[str] = None,
+        fp16: Optional[bool] = None,
     ):
         if not HAS_TTS:
             raise ImportError(
@@ -135,9 +145,17 @@ class CoquiTTSEngine:
         else:
             self.device = device
 
+        # FP16: disabled by default — RTX 5080 Blackwell benchmark proves FP32 is 11% faster
+        if fp16 is None:
+            self.fp16 = False
+        else:
+            self.fp16 = fp16
+
         # Lazy-loaded
         self._tts: Optional[_TTS_API] = None
         self._ft_model = None  # fine-tuned XTTS model
+        self._ft_gpt_latent = None
+        self._ft_spk_emb = None
 
     @property
     def is_finetuned(self) -> bool:
@@ -161,7 +179,7 @@ class CoquiTTSEngine:
         return self._tts
 
     def _load_ft_model(self):
-        """Load the fine-tuned XTTS model from ``finetuned_dir``."""
+        """Load the fine-tuned XTTS model from ``finetuned_dir`` (FP16 + cached)."""
         if self._ft_model is not None:
             return
 
@@ -171,9 +189,27 @@ class CoquiTTSEngine:
         ft_dir = os.path.abspath(self.finetuned_dir)
         config_path = os.path.join(ft_dir, "config.json")
         ckpt_path = os.path.join(ft_dir, "best_model.pth")
+
+        # Find vocab.json — try sibling xtts_v2 first, then parent pretrained_model
         vocab_path = os.path.join(
             os.path.dirname(ft_dir), "..", "pretrained_model", "vocab.json"
         )
+        xtts_v2_vocab = os.path.join(
+            os.path.dirname(os.path.dirname(ft_dir)), "xtts_v2", "vocab.json"
+        )
+        if os.path.isfile(xtts_v2_vocab):
+            vocab_path = xtts_v2_vocab
+
+        # Check model cache
+        cache_key = f"{ft_dir}|{self.fp16}"
+        if cache_key in CoquiTTSEngine._ft_cache:
+            cached = CoquiTTSEngine._ft_cache[cache_key]
+            self._ft_model = cached["model"]
+            self._ft_gpt_latent = cached["gpt_cond"]
+            self._ft_spk_emb = cached["speaker_emb"]
+            name = os.path.basename(ft_dir)
+            print(f"[Coqui] Using cached fine-tuned model: {name}")
+            return
 
         print(f"[Coqui] Loading fine-tuned model from: {ft_dir}")
         config = XttsConfig()
@@ -189,16 +225,42 @@ class CoquiTTSEngine:
             eval=True,
         )
 
-        # Cache the conditioning latents for the reference speaker
-        self._ft_gpt_latent, self._ft_spk_emb = (
-            self._ft_model.get_conditioning_latents(
-                audio_path=[self.reference_wav],
-                gpt_cond_len=30,
-                gpt_cond_chunk_len=4,
-                max_ref_length=60,
+        self._ft_model = self._ft_model.to(self.device)
+
+        # Register Hindi if applicable
+        if "hi" not in self._ft_model.tokenizer.char_limits:
+            self._ft_model.tokenizer.char_limits["hi"] = 200
+
+        # Cache the conditioning latents FIRST (in FP32) before FP16 casting
+        with torch.cuda.amp.autocast(enabled=False):
+            self._ft_gpt_latent, self._ft_spk_emb = (
+                self._ft_model.get_conditioning_latents(
+                    audio_path=[self.reference_wav],
+                    gpt_cond_len=30,
+                    gpt_cond_chunk_len=4,
+                    max_ref_length=60,
+                )
             )
-        )
-        print("[Coqui] Fine-tuned model ready.")
+
+        # NOW cast to FP16 (after latents are cached)
+        if self.fp16:
+            if hasattr(self._ft_model, "gpt") and self._ft_model.gpt is not None:
+                self._ft_model.gpt = self._ft_model.gpt.half()
+            if hasattr(self._ft_model, "hifigan_decoder"):
+                try:
+                    self._ft_model.hifigan_decoder = self._ft_model.hifigan_decoder.float()
+                except Exception:
+                    pass
+            self._ft_gpt_latent = self._ft_gpt_latent.half()
+            self._ft_spk_emb = self._ft_spk_emb.half()
+
+        # Save to cache
+        CoquiTTSEngine._ft_cache[cache_key] = {
+            "model": self._ft_model,
+            "gpt_cond": self._ft_gpt_latent,
+            "speaker_emb": self._ft_spk_emb,
+        }
+        print("[Coqui] Fine-tuned model ready (FP16={}).".format(self.fp16))
 
     # ── Public API ────────────────────────────────────────────────────────
 
@@ -220,16 +282,20 @@ class CoquiTTSEngine:
 
         if self.is_finetuned:
             self._load_ft_model()
-            out = self._ft_model.inference(
-                text=text,
-                language=language,
-                gpt_cond_latent=self._ft_gpt_latent,
-                speaker_embedding=self._ft_spk_emb,
-                repetition_penalty=5.0,
-                temperature=0.75,
-            )
+            autocast_ctx = torch.cuda.amp.autocast(enabled=self.fp16)
+            with autocast_ctx, torch.no_grad():
+                out = self._ft_model.inference(
+                    text=text,
+                    language=language,
+                    gpt_cond_latent=self._ft_gpt_latent,
+                    speaker_embedding=self._ft_spk_emb,
+                    repetition_penalty=5.0,
+                    temperature=0.75,
+                )
             import numpy as np
             wav = out["wav"]
+            if isinstance(wav, torch.Tensor):
+                wav = wav.cpu().numpy()
             samples = np.clip(wav, -1.0, 1.0)
             return (samples * 32767).astype(np.int16).tobytes()
 
@@ -272,15 +338,19 @@ class CoquiTTSEngine:
 
         if self.is_finetuned:
             self._load_ft_model()
-            out = self._ft_model.inference(
-                text=text,
-                language=language,
-                gpt_cond_latent=self._ft_gpt_latent,
-                speaker_embedding=self._ft_spk_emb,
-                repetition_penalty=5.0,
-                temperature=0.75,
-            )
+            autocast_ctx = torch.cuda.amp.autocast(enabled=self.fp16)
+            with autocast_ctx, torch.no_grad():
+                out = self._ft_model.inference(
+                    text=text,
+                    language=language,
+                    gpt_cond_latent=self._ft_gpt_latent,
+                    speaker_embedding=self._ft_spk_emb,
+                    repetition_penalty=5.0,
+                    temperature=0.75,
+                )
             samples = np.array(out["wav"], dtype=np.float32)
+            if isinstance(samples, torch.Tensor):
+                samples = samples.cpu().numpy()
             samples = np.clip(samples, -1.0, 1.0)
             sr = 24000  # XTTS native output rate
         else:
@@ -370,15 +440,18 @@ class MultiSpeakerCoquiEngine:
     Args:
         voice_map: Dict mapping speaker labels to reference WAV paths.
         device: Torch device.
+        fp16: Enable FP16 half-precision (default: auto-detect).
     """
 
     def __init__(
         self,
         voice_map: dict[str, str],
         device: Optional[str] = None,
+        fp16: Optional[bool] = None,
     ):
         self.voice_map = voice_map
         self.device = device
+        self.fp16 = fp16
 
         # One engine per speaker (they share the same TTS model in memory
         # after the first init, but keep separate ref_wav handles)
@@ -395,6 +468,7 @@ class MultiSpeakerCoquiEngine:
             self._engines[speaker] = CoquiTTSEngine(
                 reference_wav=ref_wav,
                 device=self.device,
+                fp16=self.fp16,
             )
         return self._engines[speaker]
 

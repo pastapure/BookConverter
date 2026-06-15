@@ -1,0 +1,144 @@
+
+######################################################################
+#  BENCHMARK ITERATION: FP16
+######################################################################
+
+======================================================================
+  BENCHMARK MODE: FP16=ON
+======================================================================
+  GPU: NVIDIA GeForce RTX 5080
+  VRAM before: 0.0 GB
+  Device: cuda
+  Loading model (FP16=True)...
+GPT2InferenceModel has generative capabilities, as `prepare_inputs_for_generation` is explicitly overwritten. However, it doesn't directly inherit from `GenerationMixin`. From 👉v4.50👈 onwards, `PreTrainedModel` will NOT inherit from `GenerationMixin`, and this model will lose the ability to call `generate` and other related functions.
+  - If you're using `trust_remote_code=True`, you can get rid of this warning by loading the model with an auto class. See https://huggingface.co/docs/transformers/en/model_doc/auto#auto-classes
+  - If you are the owner of the model architecture code, please modify your model class such that it inherits from `GenerationMixin` (after `PreTrainedModel`, otherwise you'll get an exception).
+  - If you are not the owner of the model architecture class, please contact the model code owner to update it.
+  Checkpoint loaded: 132.0s
+D:\Projects\BookConverter\benchmark_tts.py:88: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with torch.cuda.amp.autocast(enabled=False):
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\utils.py:213: UserWarning: In 2.9, this function's implementation will be changed to use torchaudio.load_with_torchcodec` under the hood. Some parameters like ``normalize``, ``format``, ``buffer_size``, and ``backend`` will be ignored. We recommend that you port your code to rely directly on TorchCodec's decoder instead: https://docs.pytorch.org/torchcodec/stable/generated/torchcodec.decoders.AudioDecoder.html#torchcodec.decoders.AudioDecoder.
+  warnings.warn(
+  Latents computed: 4.6s
+  Total load: 139.6s
+  VRAM after load: 1.0 GB  (+1.0 GB)
+
+  Warm-up (1 inference)...
+D:\Projects\BookConverter\benchmark_tts.py:115: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  autocast_ctx = torch.cuda.amp.autocast(enabled=fp16)
+The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+  Warm-up done: 5.21s
+
+  [SHORT] 20 chars ...
+    inference: 4.41s  |  audio: 1.9s  |  RTF: 2.27x
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\utils.py:337: UserWarning: In 2.9, this function's implementation will be changed to use torchaudio.save_with_torchcodec` under the hood. Some parameters like format, encoding, bits_per_sample, buffer_size, and ``backend`` will be ignored. We recommend that you port your code to rely directly on TorchCodec's encoder instead: https://docs.pytorch.org/torchcodec/stable/generated/torchcodec.encoders.AudioEncoder
+  warnings.warn(
+    saved: short.wav (186,448 bytes)
+
+  [MEDIUM] 97 chars ...
+    inference: 12.14s  |  audio: 5.8s  |  RTF: 2.08x
+    saved: medium.wav (561,232 bytes)
+
+  [LONG] 326 chars ...
+    inference: 38.46s  |  audio: 19.4s  |  RTF: 1.98x
+    saved: long.wav (1,862,736 bytes)
+
+  [XLONG] 632 chars ...
+    inference: 77.49s  |  audio: 39.4s  |  RTF: 1.97x
+    saved: xlong.wav (3,779,664 bytes)
+
+  [PARAGRAPH] 660 chars ...
+    inference: 75.54s  |  audio: 39.3s  |  RTF: 1.92x
+    saved: paragraph.wav (3,770,448 bytes)
+
+──────────────────────────────────────────────────────────────────────
+  SUMMARY: FP16=ON
+──────────────────────────────────────────────────────────────────────
+  Model load time:      177.5s
+  Total inference:      208.0s
+  Total audio output:   105.8s
+  Average RTF:          1.97x
+  VRAM used:            1.0 GB
+
+######################################################################
+#  BENCHMARK ITERATION: FP32
+######################################################################
+
+======================================================================
+  BENCHMARK MODE: FP16=OFF
+======================================================================
+  GPU: NVIDIA GeForce RTX 5080
+  VRAM before: 0.0 GB
+  Device: cuda
+  Loading model (FP16=False)...
+  Checkpoint loaded: 96.7s
+  Latents computed: 0.6s
+  Total load: 99.0s
+  VRAM after load: 1.8 GB  (+1.8 GB)
+
+  Warm-up (1 inference)...
+  Warm-up done: 3.50s
+
+  [SHORT] 20 chars ...
+    inference: 3.61s  |  audio: 2.0s  |  RTF: 1.77x
+    saved: short.wav (195,664 bytes)
+
+  [MEDIUM] 97 chars ...
+    inference: 9.61s  |  audio: 5.5s  |  RTF: 1.76x
+    saved: medium.wav (525,392 bytes)
+
+  [LONG] 326 chars ...
+    inference: 35.55s  |  audio: 20.6s  |  RTF: 1.73x
+    saved: long.wav (1,978,448 bytes)
+
+  [XLONG] 632 chars ...
+    inference: 67.12s  |  audio: 39.4s  |  RTF: 1.70x
+    saved: xlong.wav (3,779,664 bytes)
+
+  [PARAGRAPH] 660 chars ...
+    inference: 71.64s  |  audio: 39.9s  |  RTF: 1.80x
+    saved: paragraph.wav (3,828,816 bytes)
+
+──────────────────────────────────────────────────────────────────────
+  SUMMARY: FP16=OFF
+──────────────────────────────────────────────────────────────────────
+  Model load time:      99.0s
+  Total inference:      187.5s
+  Total audio output:   107.4s
+  Average RTF:          1.75x
+  VRAM used:            1.8 GB
+
+
+======================================================================
+  SPEEDUP COMPARISON: FP16 vs FP32
+======================================================================
+
+  SAMPLE          FP16 (s)     FP32 (s)     SPEEDUP    IMPROVEMENT 
+  ───────────────────────────────────────────────────────
+  short           4.41         3.61         0.82      x -22%        
+  medium          12.14        9.61         0.79      x -26%        
+  long            38.46        35.55        0.92      x -8%         
+  xlong           77.49        67.12        0.87      x -15%        
+  paragraph       75.54        71.64        0.95      x -5%         
+  ───────────────────────────────────────────────────────
+  TOTAL           208.00       187.50       0.90      x
+
+  Model load times: FP16=177.5s, FP32=99.0s (speedup: 0.56x)
+  Average RTF: FP16=1.97x, FP32=1.75x (-13%)
+  VRAM used: FP16=1.0 GB, FP32=1.8 GB  (saves 44%)
+  VRAM savings: FP16 uses 1.0 GB vs FP32 1.8 GB (44% less)
+
+──────────────────────────────────────────────────────────────────────
+  AUDIO INTEGRITY VERIFICATION
+──────────────────────────────────────────────────────────────────────
+D:\Projects\BookConverter\benchmark_tts.py:243: UserWarning: torchaudio._backend.utils.info has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  info = torchaudio.info(path)
+C:\Users\Niravi\AppData\Local\hermes\hermes-agent\venv\Lib\site-packages\torchaudio\_backend\soundfile_backend.py:120: UserWarning: torchaudio._backend.common.AudioMetaData has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  return AudioMetaData(
+  ✓ All audio files valid — no corruption or truncation
+  Result: ✓ PASS
+
+  Results saved: D:\Projects\BookConverter\benchmark_results\benchmark_report.json
+  Audio outputs: D:\Projects\BookConverter\benchmark_results\<mode>
+======================================================================
+
